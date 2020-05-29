@@ -13,7 +13,7 @@
         },"ECRRepoName": {
             "Type": "String",
             "Description" : "Name of the ECR repository. must be lowercase.",
-            "Default":"etltest"
+            "Default":"selfserveetl"
         }
     },
     "Resources": {
@@ -119,7 +119,7 @@
                             {
                               "Action": [
                                 "ecr:GetAuthorizationToken",
-								"ecs:UpdateService"
+								                "ecs:UpdateService"
                               ],
                               "Resource": "*",
                               "Effect": "Allow"

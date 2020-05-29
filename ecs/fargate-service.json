@@ -1,47 +1,54 @@
 {
-    "Description": "Container Fargate Service (fdp-1p5s1037g)",
-	"Metadata" : {
-	  "Source":"https://github.com/awslabs/aws-cloudformation-templates/blob/master/aws/services/ECS/FargateLaunchType/services/private-subnet-public-service.yml"
-	},
-    "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Container Fargate Service (fdp-1p5s1037g)",
+  "Metadata" : {
+    "Source":"https://github.com/awslabs/aws-cloudformation-templates/blob/master/aws/services/ECS/FargateLaunchType/services/private-subnet-public-service.yml"
+  },
+  "AWSTemplateFormatVersion": "2010-09-09",
     "Parameters": {
         "ECRImageURI": {
             "Type": "String",
-            "Description" : "URI for the container from Amazon Elastic Container Registry."
+            "Description" : "Arc Jupyter Public Docker Image URI",
+            "Default": "triplai/arc-jupyter"
         },
         "TaskDefinitionName": {
             "Type": "String",
-            "Description" : "This will set the Container, Task Definition, and Service name in Fargate."
+            "Description" : "This will set the Container, Task Definition, and Service name in Fargate.",
+            "Default": "arcjupyter"
         },
         "ContainerPort": {
             "Type":"Number",
-            "Description" : "port number exposed from the container image.",
-            "Default":80
-        },  		
+            "Description" : "port number to be used by Jupyter service.",
+            "Default":8888
+        },
         "ContainerSize": {
             "Type":"String",
-            "Description" : "Size of container for Fargate task.",
+            "Description" : "Size of compute for Jupyter Notebook - Small(2vCPU,8G MEM),Medium(2vCPU,16GB MEM),Large(4vCPU,30GB MEM)",
             "Default":"Small",
             "AllowedValues": ["Small","Medium","Large"]
+        },
+        "DataLakeS3Bucket":{
+            "Type":"String",
+            "Description" : "A S3 bucket to store your data for intput and output",
+            "Default": "arcdemo2020"
         }
-    },    
-	"Mappings" : {
+  },
+  "Mappings" : {
         "MapContainerSize" : {
             "Small" : {
-                "cpu" : "512" ,
-                "mem" : "1024"
+                "cpu" : "2048" ,
+                "mem" : "8192"
             },
             "Medium" : {
-                "cpu" : "1024",
-                "mem" : "2048"
+                "cpu" : "2048",
+                "mem" : "16384"
             },
             "Large" : {
                 "cpu" : "4096",
-                "mem" : "8192"
+                "mem" : "30720"
             }
         }
     },
-    "Resources": {
+  "Resources": {
       "TaskLogGroup": {
           "Type" : "AWS::Logs::LogGroup",
           "Properties" : {
@@ -63,87 +70,160 @@
                 "ContainerDefinitions" : [
                     {
                       "PortMappings": [
-                        { "ContainerPort": {"Ref": "ContainerPort"} }
+                        { "ContainerPort": {"Ref": "ContainerPort"} },
+                        { "ContainerPort": 4040}
                       ],
                       "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
                           "awslogs-group": {"Ref":"TaskLogGroup"},
-						  "awslogs-region": {"Ref":"AWS::Region"},
+                          "awslogs-region": {"Ref":"AWS::Region"},
                           "awslogs-stream-prefix": "ecs"
                         }
                       },
+                      "Command": [
+                          "jupyter",
+                          "notebook",
+                          "--ip=0.0.0.0",
+                          "--no-browser",
+                          "--NotebookApp.password=''",
+                          "--NotebookApp.token=''"
+                     ],
                       "Environment": [
-                            {
-                                "Name": "AWS_REGION",
-                                "Value": {"Ref":"AWS::Region"}
-                            }
+                        {
+                          "Name": "AWS_REGION",
+                          "Value": {"Ref":"AWS::Region"}
+                        },
+                        {
+                          "Name": "JAVA_OPTS",
+                          "Value": {
+                                    "Fn::Join": [
+                                     "", [
+                                        "-Xmx",
+                                        { "Fn::FindInMap" : [ "MapContainerSize", { "Ref" : "ContainerSize" }, "mem"]},
+                                        "M"
+                                    ]
+                                 ]
+                                },
+                        },
+                        {
+                          "Name": "ETL_CONF_DATALAKE_LOC",
+                          "Value": {"Ref":"DataLakeS3Bucket"}
+                        }
                       ],
                       "Image": {"Ref":"ECRImageURI"},
                       "Name": {"Ref":"TaskDefinitionName"}
                     }
                 ]
             }
-        },      
-	    "ecsservice" : {
-		  "Type" : "AWS::ECS::Service",
-		  "DependsOn": ["PublicLoadBalancerListener"],
-		  "Properties" : {			
-			"TaskDefinition" : { "Ref" : "taskdefinition" },
-			"DesiredCount" : "1",
-			"LoadBalancers" : [{
-			  "TargetGroupArn" : { "Ref" : "TargetGroup" },
-			  "ContainerPort" : { "Ref" : "ContainerPort" },
-			  "ContainerName" : {"Ref":"TaskDefinitionName"}
-			}],
-			"Cluster" : { "Fn::ImportValue" : "FargateClusterName" },
-			"LaunchType": "FARGATE",
-			"ServiceName": {"Ref":"TaskDefinitionName"},
-			"NetworkConfiguration":{
-				"AwsvpcConfiguration" : {
-				  "AssignPublicIp": "DISABLED",
-				  "SecurityGroups":[
-					 {"Fn::ImportValue": "ECSFargateContainerSecurityGroup" }
-				   ],
-				  "Subnets": [
-					{ "Fn::ImportValue": "ECSPrivateSubnetOne"},
-					{ "Fn::ImportValue": "ECSPrivateSubnetTwo"}
-					]
-			}}
-			
-		  }
-		},
-		 "TargetGroup" : {
-		   "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
-		   "Properties" : {
-		     "HealthCheckIntervalSeconds" : 30,
-		     "HealthCheckPath" : "/",
-		     "HealthCheckProtocol" : "HTTP",
-		     "HealthCheckTimeoutSeconds" : 5,
-		     "HealthyThresholdCount" : 2,
-		     "TargetType" : "ip",
-		     "Name" : { "Ref": "TaskDefinitionName" },
-		     "Port" : { "Ref": "ContainerPort"},
-		     "Protocol" : "HTTP",
-		     "UnhealthyThresholdCount" : 2,
-		     "VpcId" : { "Fn::ImportValue" : "FargateClusterVPCId" }
-		  }
-		},
-		
-		"PublicLoadBalancerListener" : {
-			"Type" : "AWS::ElasticLoadBalancingV2::Listener",			
-			"Properties" : {
-				"DefaultActions" : [
-					{ "TargetGroupArn" : {"Ref":"TargetGroup"} ,
-					"Type" : "forward" }
-					],
-				"LoadBalancerArn" : { "Fn::ImportValue" :"ECSPublicLoadBalancer"},
-				"Port" : {"Ref": "ContainerPort"},
-				"Protocol" : "HTTP"
-			}
-		}		
-    },
-	"Outputs": {
-        "FargateService":{"Value": { "Ref":"ecsservice" } }
-    }
+        },
+      "ecsservice" : {
+          "Type" : "AWS::ECS::Service",
+          "DependsOn": ["PublicLoadBalancerListenerWeb","PublicLoadBalancerListenerSpark"],
+          "Properties" : {
+            "TaskDefinition" : { "Ref" : "taskdefinition" },
+            "DesiredCount" : 1,
+            "LoadBalancers" : [
+              {
+              "TargetGroupArn" : { "Ref" : "TargetGroupWeb" },
+              "ContainerPort" : { "Ref" : "ContainerPort" },
+              "ContainerName": {"Ref":"TaskDefinitionName"}
+              },
+              {
+              "TargetGroupArn" : { "Ref" : "TargetGroupSpark" },
+              "ContainerPort" : 4040,
+              "ContainerName": {"Ref":"TaskDefinitionName"}
+              }
+          ],
+            "Cluster": { "Fn::ImportValue" : "FargateClusterName" },
+            "LaunchType": "FARGATE",
+            "ServiceName": {"Ref":"TaskDefinitionName"},
+            "NetworkConfiguration":{
+                "AwsvpcConfiguration" : {
+                  "AssignPublicIp": "DISABLED",
+                  "SecurityGroups":[{"Fn::ImportValue": "ECSFargateContainerSecurityGroup" }],
+                  "Subnets": [
+                    { "Fn::ImportValue": "ECSPrivateSubnetOne"},
+                    { "Fn::ImportValue": "ECSPrivateSubnetTwo"}
+                  ]
+                }
+            }
+          }
+      },
+      "TargetGroupWeb": {
+        "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+        "Properties" : {
+          "HealthCheckIntervalSeconds" : 60,
+          "HealthCheckPath" : "/",
+          "HealthCheckProtocol" : "HTTP",
+          "HealthCheckTimeoutSeconds" : 5,
+          "HealthyThresholdCount" : 5,
+          "TargetType": "ip",
+          "Matcher": {"HttpCode" : "302"},
+          "Name": { "Ref": "TaskDefinitionName" },
+          "Port": { "Ref": "ContainerPort"},
+          "Protocol": "HTTP",
+          "UnhealthyThresholdCount" : 2,
+          "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
+        }
+      },
+      "TargetGroupSpark": {
+        "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+        "Properties" : {
+          "HealthCheckIntervalSeconds" : 60,
+          "HealthCheckPath" : "/",
+          "HealthCheckProtocol" : "HTTP",
+          "HealthCheckTimeoutSeconds" : 5,
+          "HealthyThresholdCount" : 5,
+          "HealthCheckPort": { "Ref": "ContainerPort"},
+          "TargetType": "ip",
+          "Matcher": {"HttpCode" : "302"},
+          "Name": { "Ref": "TaskDefinitionName" },
+          "Port": 4040,
+          "Protocol": "HTTP",
+          "UnhealthyThresholdCount" : 2,
+          "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
+        }
+      },
+      "PublicLoadBalancer":{
+        "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+        "Properties" : {
+          "Scheme": "internet-facing",
+          "LoadBalancerAttributes":[{
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "30"
+          }],
+          "Subnets":[
+            {"Fn::ImportValue" :"ARCPublicSubnetOne"},
+            {"Fn::ImportValue" :"ARCPublicSubnetTwo"}
+          ],
+          "SecurityGroups": [{"Fn::ImportValue" :"ECSPublicLoadBalancerSG"}]
+        }
+      },
+      "PublicLoadBalancerListenerWeb": {
+        "Type" : "AWS::ElasticLoadBalancingV2::Listener",
+        "Properties" : {
+          "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupWeb"} ,"Type" : "forward" }],
+          "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
+          "Port" : {"Ref": "ContainerPort"},
+          "Protocol" : "HTTP"
+        }
+      },
+      "PublicLoadBalancerListenerSpark": {
+        "Type" : "AWS::ElasticLoadBalancingV2::Listener",
+        "Properties" : {
+          "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupSpark"} ,"Type" : "forward" }],
+          "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
+          "Port" : 4040,
+          "Protocol" : "HTTP"
+        }
+      }
+  },  
+  "Outputs": {
+      "FargateService":{"Value": { "Ref":"ecsservice" } },
+      "NotebookURL":{
+        "Value": {"Fn::Join": ["", ["http://", {"Fn::GetAtt": [ "PublicLoadBalancer","DNSName"]},":8888"]]},
+        "Description": "Access the Jupyter notebook from this link"
+      }
+  }
 }

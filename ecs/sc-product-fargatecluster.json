@@ -24,7 +24,7 @@
         "fargatecluster": {
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
-                "Name": "ECS Fargate Cluster",
+                "Name": "1-ETL Cluster",
                 "Description": "This product builds an ECS cluster for Fargate.",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},

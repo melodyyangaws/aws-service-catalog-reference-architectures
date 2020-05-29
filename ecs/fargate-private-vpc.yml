@@ -63,7 +63,7 @@ Resources:
   FlowLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
-        RetentionInDays: '30'
+        RetentionInDays: 30
   # Two public subnets, where containers can have public IP addresses
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
@@ -211,27 +211,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableTwo
       SubnetId: !Ref PrivateSubnetTwo
 
-  # OPTIONAL: VPC Endpoint for DynamoDB
-  # If a container needs to access DynamoDB this allows a container in the private subnet
-  # to talk to DynamoDB directly without needing to go via the NAT gateway. This reduces
-  # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
-  # your other traffic.
-  DynamoDBEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "*"
-            Principal: "*"
-            Resource: "*"
-      RouteTableIds:
-        - !Ref 'PrivateRouteTableOne'
-        - !Ref 'PrivateRouteTableTwo'
-      ServiceName: !Join [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".dynamodb" ] ]
-      VpcId: !Ref 'VPC'
-
   # ECS Resources
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -257,21 +236,32 @@ Resources:
     Properties:
       Description: Ingress from the public ALB
       GroupId: !Ref 'FargateContainerSecurityGroup'
-      IpProtocol: -1
+      IpProtocol: tcp
+      FromPort: 8888
+      ToPort: 8888
       SourceSecurityGroupId: !Ref 'PublicLoadBalancerSG'
+  EcsSecurityGroup2IngressFromPublicALB:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the public ALB
+      GroupId: !Ref 'FargateContainerSecurityGroup'
+      IpProtocol: tcp
+      FromPort: 4040
+      ToPort: 4040
+      SourceSecurityGroupId: !Ref 'PublicLoadBalancerSG'    
   EcsSecurityGroupIngressFromPrivateALB:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the private ALB
       GroupId: !Ref 'FargateContainerSecurityGroup'
-      IpProtocol: -1
+      IpProtocol: '-1'
       SourceSecurityGroupId: !Ref 'PrivateLoadBalancerSG'
   EcsSecurityGroupIngressFromSelf:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from other containers in the same security group
       GroupId: !Ref 'FargateContainerSecurityGroup'
-      IpProtocol: -1
+      IpProtocol: '-1'
       SourceSecurityGroupId: !Ref 'FargateContainerSecurityGroup'
 
   # Load balancers for getting traffic to containers.
@@ -293,25 +283,16 @@ Resources:
       GroupDescription: Public facing load balancer Security Group
       VpcId: !Ref 'VPC'
       SecurityGroupIngress:
-          # Allow access to ALB from anywhere on the internet
-          - CidrIp: 0.0.0.0/0
-            IpProtocol: -1
-  PublicLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DependsOn: GatewayAttachement
-    Properties:
-      Scheme: internet-facing
-      LoadBalancerAttributes:
-      - Key: idle_timeout.timeout_seconds
-        Value: '30'
-      Subnets:
-        # The load balancer is placed into the public subnets, so that traffic
-        # from the internet can reach the load balancer directly via the internet gateway
-        - !Ref PublicSubnetOne
-        - !Ref PublicSubnetTwo
-      SecurityGroups: [!Ref 'PublicLoadBalancerSG']
+          # Allow access to ALB from anywhere on the internet with 2 ports open
+          - IpProtocol: tcp
+            FromPort: 8888
+            ToPort: 8888
+            CidrIp: 0.0.0.0/0  
+          - IpProtocol: tcp
+            FromPort: 4040
+            ToPort: 4040
+            CidrIp: 0.0.0.0/0    
   
-
   # An internal load balancer, this would be used for a service that is not
   # directly accessible to the public, but instead should only receive traffic
   # from your other services.
@@ -325,7 +306,7 @@ Resources:
     Properties:
       Description: Only accept traffic from a container in the fargate container security group
       GroupId: !Ref 'PrivateLoadBalancerSG'
-      IpProtocol: -1
+      IpProtocol: '-1'
       SourceSecurityGroupId: !Ref 'FargateContainerSecurityGroup'
   PrivateLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -439,6 +420,11 @@ Resources:
 # about changing any of them, because of them are exported with specific
 # names so that the other task related CF templates can use them.
 Outputs:
+  NotebookUrl:
+    Description: The JupyterNotebook URL (External Application Load Balancer)
+    Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName', ':8888']]
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ExternalUrl' ] ]
   ClusterName:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
@@ -449,16 +435,11 @@ Outputs:
     Value: !Join ['', ['http://', !GetAtt 'PrivateLoadBalancer.DNSName']]
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'InternalUrl' ] ]
-  ExternalUrl:
-    Description: The url of the external load balancer
-    Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName']]
+  PublicLoadBalancerSG:
+    Description: The Public LoadBalancer Security Group
+    Value: !Ref 'PublicLoadBalancerSG'
     Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ExternalUrl' ] ]
-  ECSPublicLoadBalancer:
-    Description: The ARN of the Public LoadBalancer
-    Value: !Ref 'PublicLoadBalancer'
-    Export:
-      Name: 'ECSPublicLoadBalancer'
+    Name: 'ECSPublicLoadBalancerSG'
   ECSTaskExecutionRole:
     Description: The ARN of the ECS role
     Value: !GetAtt 'ECSTaskExecutionRole.Arn'
@@ -473,12 +454,12 @@ Outputs:
     Description: Public subnet one
     Value: !Ref 'PublicSubnetOne'
     Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PublicSubnetOne' ] ]
+      Name: 'ARCPublicSubnetOne'
   PublicSubnetTwo:
     Description: Public subnet two
     Value: !Ref 'PublicSubnetTwo'
     Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PublicSubnetTwo' ] ]
+      Name: 'ARCPublicSubnetTwo'
   PrivateSubnetOne:
     Description: Private subnet one
     Value: !Ref 'PrivateSubnetOne'

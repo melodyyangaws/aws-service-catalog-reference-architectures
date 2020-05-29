@@ -24,7 +24,7 @@
         "ECSTaskProduct": {
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
-                "Name": "Amazon ECS Service",
+                "Name": "2-Arc Jupyter Service",
                 "Description": "This product creates a simple ECS Service for Fargate with public loadbalancing.",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},

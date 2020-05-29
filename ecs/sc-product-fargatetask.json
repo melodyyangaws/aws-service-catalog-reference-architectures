@@ -24,7 +24,7 @@
         "ECSTaskProduct": {
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
-                "Name": "Amazon ECS task",
+                "Name": "3-Arc Job Service",
                 "Description": "This product creates a simple ECS task for Fargate.",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},

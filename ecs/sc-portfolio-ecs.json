@@ -66,7 +66,7 @@
         "RepoRootURL": {
             "Type":"String",
             "Description":"S3 root url for the repository containing the product templates.",
-            "Default":"https://s3.amazonaws.com/aws-service-catalog-reference-architectures/"
+            "Default":"https://arcdemo2020.s3-ap-southeast-2.amazonaws.com/sc-code/"
         },
         "CreateEndUsers":{
             "Type":"String",
@@ -202,7 +202,7 @@
             "TimeoutInMinutes" : 5
           }
         },
-		"ecsserviceproduct": {
+        "ecsserviceproduct": {
           "Type" : "AWS::CloudFormation::Stack",
           "Properties" : {
             "Parameters" : {         
@@ -221,7 +221,7 @@
         }
     },
     "Outputs": {
-		"EndUserRoleArn":{
+        "EndUserRoleArn":{
           "Condition":"CondCreateEndUsers",
           "Value": {"Fn::GetAtt":["stackServiceCatalogEndusers","Outputs.EndUserRoleArn"]}
         },
@@ -229,10 +229,10 @@
           "Condition":"CondCreateEndUsers",
           "Value": {"Fn::GetAtt":["stackServiceCatalogEndusers","Outputs.EndUserGroupArn"]}
         },
-		"EndUserGroupName":{
+        "EndUserGroupName":{
           "Condition":"CondCreateEndUsers",
           "Value": {"Fn::GetAtt":["stackServiceCatalogEndusers","Outputs.EndUserGroupName"]}
-        },		
+        },
         "LaunchConstraintRoleARN":{
           "Condition":"CreateLaunchConstraint",
           "Value": { "Fn::GetAtt":["LaunchConstraintRole", "Outputs.LaunchRoleArn"] } 
@@ -240,11 +240,11 @@
         "LaunchConstraintRoleName":{
           "Condition":"CreateLaunchConstraint",
           "Value": { "Fn::GetAtt":["LaunchConstraintRole", "Outputs.LaunchRoleName"] } 
-        },		
+        },
         "ECSPortfolioID":{ "Value": { "Ref":"SCECSportfolio" } },
         "containerpipelineproductId":{"Value": { "Fn::GetAtt":["containerpipelineproduct","Outputs.ProductId"]} },
         "fargateclusterproductId":{"Value":    { "Fn::GetAtt":["fargateclusterproduct","Outputs.ProductId"]} },
         "ecstaskproductId":{"Value":  { "Fn::GetAtt":["ecstaskproduct","Outputs.ProductId"]} },
-		"ecsserviceproduct":{"Value": { "Fn::GetAtt":["ecstaskproduct","Outputs.ProductId"]} }
+        "ecsserviceproduct":{"Value": { "Fn::GetAtt":["ecstaskproduct","Outputs.ProductId"]} }
     }
 }

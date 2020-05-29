@@ -10,11 +10,19 @@ phases:
   build:
     commands:
       - echo Docker image build started on `date`
-      - docker build -t $IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER .
-      - docker tag $IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER            
-      - docker tag $IMAGE_REPO_NAME:$CODEBUILD_BUILD_NUMBER $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG_LATEST            
+      - ECR_REPO=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - JUPYTER_DOCKERIMAGE=triplai/arc-jupyter
+      - ARC_DOCKERIMAGE=triplai/arc
+      - JUPYTER_DOCKERIMAGE_TAG="${ECR_REPO}:arcjupyter"
+      - ARC_DOCKERIMAGE_TAG="${ECR_REPO}:arc"
+      - docker pull $JUPYTER_DOCKERIMAGE
+      - docker pull $ARC_DOCKERIMAGE
+      - docker tag ${JUPYTER_DOCKERIMAGE} $JUPYTER_DOCKERIMAGE_TAG
+      - docker tag ${ARC_DOCKERIMAGE} $ARC_DOCKERIMAGE_TAG
+
   post_build:
     commands:
       - echo Pushing the Docker image to ECR...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - docker push $JUPYTER_DOCKERIMAGE_TAG
+      - docker push $ARC_DOCKERIMAGE_TAG
       #- aws ecs update-service --service <<SERVICE NAME HERE>> --cluster <<CLUSTER NAME HERE>> --force-new-deployment  
