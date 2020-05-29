@@ -420,11 +420,6 @@ Resources:
 # about changing any of them, because of them are exported with specific
 # names so that the other task related CF templates can use them.
 Outputs:
-  NotebookUrl:
-    Description: The JupyterNotebook URL (External Application Load Balancer)
-    Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName', ':8888']]
-    Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ExternalUrl' ] ]
   ClusterName:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
@@ -435,11 +430,11 @@ Outputs:
     Value: !Join ['', ['http://', !GetAtt 'PrivateLoadBalancer.DNSName']]
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'InternalUrl' ] ]
-  PublicLoadBalancerSG:
+  PublicALBSG:
     Description: The Public LoadBalancer Security Group
     Value: !Ref 'PublicLoadBalancerSG'
     Export:
-    Name: 'ECSPublicLoadBalancerSG'
+      Name: 'ECSPublicLoadBalancerSG'
   ECSTaskExecutionRole:
     Description: The ARN of the ECS role
     Value: !GetAtt 'ECSTaskExecutionRole.Arn'
