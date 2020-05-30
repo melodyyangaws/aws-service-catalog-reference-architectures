@@ -1,10 +1,17 @@
-# AWS Service Catalog ECS Reference architecture
+# Self-service ETL Reference architecture
 
 This reference architecture creates an AWS Service Catalog Portfolio called "Service Catalog Containers Reference Architecture"  
 The Portfolio provides 3 products which will create a full DevOps deployment pipeline from code to container deployment in Fargate.  
 
 ### Create the portfolio using the Launchstack: 
 [![CreateStack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/#/stacks/new?stackName=SC-RA-ECS-Portfolio&templateURL=https://arcdemo2020.s3-ap-southeast-2.amazonaws.com/sc-code/ecs/sc-portfolio-ecs.json)  
+
+1. Once above is finished, go to [Service Catalog](https://ap-southeast-2.console.aws.amazon.com/servicecatalog/) in AWS console
+2. Click your login dropdown box, choose [Switch Role](https://signin.aws.amazon.com/switchrole)
+3. Input your AWS AccountID, and `ServiceCatalogEndusers` as your Role
+4. Launch product `1-ETL Cluster` without change any settings. Wait for couple of minutes until the provision is completed.
+5. Launch product `2-Arc Jupyter Service`, no change on settings, wait until the provision is done.
+6. Finally, launch product `3-Arc Job Service`, wait until the provision is done.
 
 ### Install from your own S3 bucket:
 1. clone this git repo:  

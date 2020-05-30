@@ -362,7 +362,7 @@ Resources:
               - 'elasticloadbalancing:RegisterTargets'
             Resource: '*'
 
-  # This is a role which is used by the ECS tasks themselves.
+  # This is a role which is used by the ECS execution when spin up Containers.
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -373,26 +373,9 @@ Resources:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
-      Policies:
-        - PolicyName: AmazonECSTaskExecutionRolePolicy
-          PolicyDocument:
-            Statement:
-            - Effect: Allow
-              Action:
-                # Allow the ECS Tasks to download images from ECR
-                - 'ecr:GetAuthorizationToken'
-                - 'ecr:BatchCheckLayerAvailability'
-                - 'ecr:GetDownloadUrlForLayer'
-                - 'ecr:BatchGetImage'
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy]
 
-                # Allow the ECS tasks to upload logs to CloudWatch
-                - 'logs:CreateLogStream'
-                - 'logs:PutLogEvents'
-                - 'logs:CreateLogGroup'
-                - 'logs:DescribeLogStreams'                
-              Resource: '*'
-
-  # This is a role which is used to publish flow logs to the specified log group in CloudWatch Logs
+# This is a role which is used to publish flow logs to the specified log group in CloudWatch Logs
   FlowLogsRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -436,7 +419,7 @@ Outputs:
     Export:
       Name: 'ECSPublicLoadBalancerSG'
   ECSTaskExecutionRole:
-    Description: The ARN of the ECS role
+    Description: The ARN of the ECS Execution role
     Value: !GetAtt 'ECSTaskExecutionRole.Arn'
     Export:
       Name: 'ECSTaskExecutionRole'

@@ -55,11 +55,59 @@
               "LogGroupName" : {"Fn::Sub":"/ecs/${TaskDefinitionName}"},
               "RetentionInDays" : 30
             }
-        },    
+        }, 
+      "S3ECSTaskRole": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [
+                  {
+                     "Effect": "Allow",
+                     "Principal": {
+                        "Service": [ "ecs-tasks.amazonaws.com" ]
+                     },
+                     "Action": [ "sts:AssumeRole" ]
+                  }
+               ]
+            },
+            "Path": "/",
+            "Policies": [{
+                  "PolicyName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "ecstask" ] ] },
+                  "PolicyDocument": {
+                     "Version": "2012-10-17",
+                     "Statement": [
+                        {
+                           "Effect": "Allow",
+                           "Action": [
+                              "s3:ListBucket"
+                           ],
+                           "Resource": {
+                              "Fn::Sub":"arn:aws:s3:::${DataLakeS3Bucket}"
+                          },
+                        },
+                        {
+                           "Effect": "Allow",
+                           "Action": [
+                              "s3:PutObject",
+                              "s3:GetObject",
+                              "s3:DeleteObject"
+                           ],
+                           "Resource": {
+                              "Fn::Sub":"arn:aws:s3:::${DataLakeS3Bucket}/*"
+                          }
+                        }
+                     ]
+                  }
+                }
+            ]
+          }
+        },
         "taskdefinition": {
             "Type": "AWS::ECS::TaskDefinition",
             "Properties" : {
                 "ExecutionRoleArn": {"Fn::ImportValue": "ECSTaskExecutionRole"},
+                "TaskRoleArn": {"Ref": "S3ECSTaskRole"},
                 "RequiresCompatibilities": [
                   "FARGATE"
                 ],
@@ -160,7 +208,7 @@
           "HealthyThresholdCount" : 5,
           "TargetType": "ip",
           "Matcher": {"HttpCode" : "302"},
-          "Name": { "Ref": "TaskDefinitionName" },
+          "Name": {"Fn::Sub":"Web-${TaskDefinitionName}"},
           "Port": { "Ref": "ContainerPort"},
           "Protocol": "HTTP",
           "UnhealthyThresholdCount" : 2,
@@ -178,7 +226,7 @@
           "HealthCheckPort": { "Ref": "ContainerPort"},
           "TargetType": "ip",
           "Matcher": {"HttpCode" : "302"},
-          "Name": { "Ref": "TaskDefinitionName" },
+          "Name": {"Fn::Sub":"Spark-${TaskDefinitionName}"},
           "Port": 4040,
           "Protocol": "HTTP",
           "UnhealthyThresholdCount" : 2,
