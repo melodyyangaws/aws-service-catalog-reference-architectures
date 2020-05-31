@@ -118,8 +118,7 @@
                 "ContainerDefinitions" : [
                     {
                       "PortMappings": [
-                        { "ContainerPort": {"Ref": "ContainerPort"} },
-                        { "ContainerPort": 4040}
+                        { "ContainerPort": {"Ref": "ContainerPort"} }
                       ],
                       "LogConfiguration": {
                         "LogDriver": "awslogs",
@@ -167,7 +166,7 @@
         },
       "ecsservice" : {
           "Type" : "AWS::ECS::Service",
-          "DependsOn": ["PublicLoadBalancerListenerWeb","PublicLoadBalancerListenerSpark"],
+          "DependsOn": ["PublicLoadBalancerListenerWeb"],
           "Properties" : {
             "TaskDefinition" : { "Ref" : "taskdefinition" },
             "DesiredCount" : 1,
@@ -175,11 +174,6 @@
               {
               "TargetGroupArn" : { "Ref" : "TargetGroupWeb" },
               "ContainerPort" : { "Ref" : "ContainerPort" },
-              "ContainerName": {"Ref":"TaskDefinitionName"}
-              },
-              {
-              "TargetGroupArn" : { "Ref" : "TargetGroupSpark" },
-              "ContainerPort" : 4040,
               "ContainerName": {"Ref":"TaskDefinitionName"}
               }
           ],
@@ -215,24 +209,6 @@
           "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
         }
       },
-      "TargetGroupSpark": {
-        "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
-        "Properties" : {
-          "HealthCheckIntervalSeconds" : 60,
-          "HealthCheckPath" : "/",
-          "HealthCheckProtocol" : "HTTP",
-          "HealthCheckTimeoutSeconds" : 5,
-          "HealthyThresholdCount" : 5,
-          "HealthCheckPort": { "Ref": "ContainerPort"},
-          "TargetType": "ip",
-          "Matcher": {"HttpCode" : "302"},
-          "Name": {"Fn::Sub":"Spark-${TaskDefinitionName}"},
-          "Port": 4040,
-          "Protocol": "HTTP",
-          "UnhealthyThresholdCount" : 2,
-          "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
-        }
-      },
       "PublicLoadBalancer":{
         "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
         "Properties" : {
@@ -254,15 +230,6 @@
           "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupWeb"} ,"Type" : "forward" }],
           "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
           "Port" : {"Ref": "ContainerPort"},
-          "Protocol" : "HTTP"
-        }
-      },
-      "PublicLoadBalancerListenerSpark": {
-        "Type" : "AWS::ElasticLoadBalancingV2::Listener",
-        "Properties" : {
-          "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupSpark"} ,"Type" : "forward" }],
-          "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
-          "Port" : 4040,
           "Protocol" : "HTTP"
         }
       }

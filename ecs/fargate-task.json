@@ -114,9 +114,6 @@
                 },
                 "Runtime": "nodejs10.x",
                 "Timeout": 60,
-                "TracingConfig": {
-                    "Mode": "Active"
-                },
                 "Environment": {
                     "Variables": {
                         "CLUSTER_NAME": { "Fn::ImportValue" : "FargateClusterName" },
@@ -128,7 +125,7 @@
                           ]]
                         },
                         "container_name": {"Ref": "ContainerDefinitionName"},
-                        "etl_task_sg_id": [{"Fn::ImportValue": "ECSFargateContainerSecurityGroup" }],
+                        "etl_task_sg_id": {"Fn::ImportValue": "ECSFargateContainerSecurityGroup" },
                       }
                 }
           }

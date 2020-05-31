@@ -25,6 +25,7 @@ function launchEcsTask (etl_config_uri) {
     
     var job_name = path.basename(etl_config_uri).split(".")[0]
     var is_stream = etl_config_uri.toLowerCase().includes("stream")
+    var now = new Date()
     var params = {
         cluster: process.env.CLUSTER_NAME,
         taskDefinition: process.env.TASK_ID,
@@ -52,6 +53,10 @@ function launchEcsTask (etl_config_uri) {
                   {
                     name: "ETL_CONF_JOB_NAME",
                     value: job_name
+                  },
+                  {
+                    name: "ETL_CONF_CURRENT_TIMESTAMP",
+                    value: now
                   }
                 ],
                 name: process.env.container_name
