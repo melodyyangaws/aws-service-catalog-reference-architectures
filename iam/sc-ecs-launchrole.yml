@@ -65,7 +65,8 @@ Resources:
                   - "cloudformation:ValidateTemplate"
                   - "cloudformation:UpdateStack"    
                   - "lambda:GetFunction"
-                  - "lambda:CreateFunction"         
+                  - "lambda:CreateFunction"     
+                  - "lambda:AddPermission"    
                 Resource: '*'
 Outputs:
     LaunchRoleArn:
