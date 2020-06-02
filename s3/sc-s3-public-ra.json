@@ -7,6 +7,14 @@
             "DeletionPolicy": "Delete",
             "Properties": {
                 "AccessControl": "PublicRead",
+                "NotificationConfiguration": {
+                  "LambdaConfigurations" : [ {
+                      "Event" : String,
+                      "Filter" : NotificationFilter,
+                      "Function" : String
+                    }
+                ]
+                },
                 "Tags": [
                     {
                         "Key": "Name",

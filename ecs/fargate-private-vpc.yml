@@ -61,9 +61,20 @@ Resources:
 
   # VPC flow logs can publish data to CloudWatch logs
   FlowLogGroup:
-      Type: AWS::Logs::LogGroup
-      Properties:
-        RetentionInDays: 30
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+  # Application CloudWatch log group   
+  JupyterLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: /ecs/jupyter
+      RetentionInDays: 14
+  ETLLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: /ecs/etljob
+      RetentionInDays: 14         
   # Two public subnets, where containers can have public IP addresses
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
@@ -249,13 +260,6 @@ Resources:
       FromPort: 4040
       ToPort: 4040
       SourceSecurityGroupId: !Ref 'PublicLoadBalancerSG'    
-  EcsSecurityGroupIngressFromPrivateALB:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Ingress from the private ALB
-      GroupId: !Ref 'FargateContainerSecurityGroup'
-      IpProtocol: '-1'
-      SourceSecurityGroupId: !Ref 'PrivateLoadBalancerSG'
   EcsSecurityGroupIngressFromSelf:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -293,36 +297,6 @@ Resources:
             ToPort: 4040
             CidrIp: 0.0.0.0/0    
   
-  # An internal load balancer, this would be used for a service that is not
-  # directly accessible to the public, but instead should only receive traffic
-  # from your other services.
-  PrivateLoadBalancerSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Internal load balancer security group
-      VpcId: !Ref 'VPC'
-  PrivateLoadBalancerIngressFromECS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Only accept traffic from a container in the fargate container security group
-      GroupId: !Ref 'PrivateLoadBalancerSG'
-      IpProtocol: '-1'
-      SourceSecurityGroupId: !Ref 'FargateContainerSecurityGroup'
-  PrivateLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Scheme: internal
-      LoadBalancerAttributes:
-      - Key: idle_timeout.timeout_seconds
-        Value: '30'
-      Subnets:
-        # This load balancer is put into the private subnet, so that there is no
-        # route for the public to even be able to access the private load balancer.
-        - !Ref PrivateSubnetOne
-        - !Ref PrivateSubnetTwo
-      SecurityGroups: [!Ref 'PrivateLoadBalancerSG']
-  
-
   # This is an IAM role which authorizes ECS to manage resources on your
   # account on your behalf, such as updating your load balancer with the
   # details of where your containers are, so that traffic can reach your
@@ -409,11 +383,6 @@ Outputs:
     Value: !Ref 'ECSCluster'
     Export:
       Name: 'FargateClusterName'
-  InternalUrl:
-    Description: The url of the internal load balancer
-    Value: !Join ['', ['http://', !GetAtt 'PrivateLoadBalancer.DNSName']]
-    Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'InternalUrl' ] ]
   PublicALBSG:
     Description: The Public LoadBalancer Security Group
     Value: !Ref 'PublicLoadBalancerSG'
@@ -454,3 +423,13 @@ Outputs:
     Value: !Ref 'FargateContainerSecurityGroup'
     Export:
       Name: 'ECSFargateContainerSecurityGroup'
+  JupyterLogGroup:     
+    Description: A log group in cloudwatch for jupyter notebook
+    Value: !Ref 'JupyterLogGroup'
+    Export:
+      Name: 'ECSJupyterLogGroup'
+  ETLLogGroup:     
+    Description: A log group in cloudwatch for jupyter notebook
+    Value: !Ref 'ETLLogGroup'
+    Export:
+      Name: 'ECSETLLogGroup'    

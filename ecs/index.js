@@ -44,7 +44,7 @@ function launchEcsTask (etl_config_uri) {
                 environment: [
                   {
                     name: "ETL_CONF_URI",
-                    value: etl_config_uri
+                    value: etl_config_uri.toString()
                   },
                   {
                     name: "ETL_CONF_STREAMING",
@@ -56,7 +56,7 @@ function launchEcsTask (etl_config_uri) {
                   },
                   {
                     name: "ETL_CONF_CURRENT_TIMESTAMP",
-                    value: now
+                    value: now.toString()
                   }
                 ],
                 name: process.env.container_name

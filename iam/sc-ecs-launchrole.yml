@@ -66,7 +66,8 @@ Resources:
                   - "cloudformation:UpdateStack"    
                   - "lambda:GetFunction"
                   - "lambda:CreateFunction"     
-                  - "lambda:AddPermission"    
+                  - "lambda:AddPermission" 
+                  - "lambda:DeleteFunction"   
                 Resource: '*'
 Outputs:
     LaunchRoleArn:

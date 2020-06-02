@@ -28,7 +28,7 @@
         },
         "DataLakeS3Bucket":{
             "Type":"String",
-            "Description" : "A S3 bucket to store your data for intput and output",
+            "Description" : "The S3 bucket that stores your data to be processed and queried",
             "Default": "arcdemo2020"
         }
   },
@@ -49,13 +49,6 @@
         }
     },
   "Resources": {
-      "TaskLogGroup": {
-          "Type" : "AWS::Logs::LogGroup",
-          "Properties" : {
-              "LogGroupName" : {"Fn::Sub":"/ecs/${TaskDefinitionName}"},
-              "RetentionInDays" : 30
-            }
-        }, 
       "S3ECSTaskRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
@@ -123,7 +116,7 @@
                       "LogConfiguration": {
                         "LogDriver": "awslogs",
                         "Options": {
-                          "awslogs-group": {"Ref":"TaskLogGroup"},
+                          "awslogs-group": {"Fn::ImportValue": "ECSJupyterLogGroup"},
                           "awslogs-region": {"Ref":"AWS::Region"},
                           "awslogs-stream-prefix": "ecs"
                         }
@@ -179,7 +172,9 @@
           ],
             "Cluster": { "Fn::ImportValue" : "FargateClusterName" },
             "LaunchType": "FARGATE",
-            "ServiceName": {"Ref":"TaskDefinitionName"},
+            "ServiceName": {
+               "Fn::Join": [ "-", [ "jupyter", { "Ref": "AWS::StackName" } ] ]
+            },
             "NetworkConfiguration":{
                 "AwsvpcConfiguration" : {
                   "AssignPublicIp": "DISABLED",
@@ -202,7 +197,7 @@
           "HealthyThresholdCount" : 5,
           "TargetType": "ip",
           "Matcher": {"HttpCode" : "302"},
-          "Name": {"Fn::Sub":"Web-${TaskDefinitionName}"},
+          "Name": { "Fn::Sub": ["jupyter-${UniqueID}", {"UniqueID":{ "Fn::Select" : [ "3", { "Fn::Split": ["-", {"Ref": "AWS::StackName"}]}]}}]},
           "Port": { "Ref": "ContainerPort"},
           "Protocol": "HTTP",
           "UnhealthyThresholdCount" : 2,
@@ -235,10 +230,9 @@
       }
   },  
   "Outputs": {
-      "FargateService":{"Value": { "Ref":"ecsservice" } },
       "NotebookURL":{
         "Value": {"Fn::Join": ["", ["http://", {"Fn::GetAtt": [ "PublicLoadBalancer","DNSName"]},":8888"]]},
         "Description": "Access the Jupyter notebook from this link"
-      }
+      }    
   }
 }

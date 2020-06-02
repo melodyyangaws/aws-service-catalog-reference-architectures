@@ -25,7 +25,7 @@
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
                 "Name": "2-Arc Jupyter Service",
-                "Description": "This product creates a simple ECS Service for Fargate with public loadbalancing.",
+                "Description": "This product creates a Jupyter notebook for dev/test ETL jobs",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},
                 "SupportDescription": "Operations Team",

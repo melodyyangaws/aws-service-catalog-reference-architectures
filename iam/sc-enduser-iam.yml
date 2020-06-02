@@ -22,6 +22,19 @@ Resources:
               AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
             Action:
               - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: 's3-access'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                Resource: 
+                  - 'arn:aws:s3:::*/output/*'
+                  - 'arn:aws:s3:::*/output/'
+
 Outputs:
     EndUserGroupArn:
         Value: !GetAtt SCEnduserGroup.Arn
