@@ -67,7 +67,8 @@ Resources:
                   - "lambda:GetFunction"
                   - "lambda:CreateFunction"     
                   - "lambda:AddPermission" 
-                  - "lambda:DeleteFunction"   
+                  - "lambda:DeleteFunction"
+                  - "lambda:InvokeFunction"   
                 Resource: '*'
 Outputs:
     LaunchRoleArn:

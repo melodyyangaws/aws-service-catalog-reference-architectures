@@ -49,6 +49,113 @@
         }
     },
   "Resources": {
+    "S3Copy": {
+          "Type": "Custom::CopyToS3",
+          "Properties": {
+              "ServiceToken": {
+                "Fn::GetAtt": [ "CopyFilesToS3","Arn"]
+              },
+              "TargetBucketName": {"Ref": "DataLakeS3Bucket"},
+              "SourceBucketName": "arcdemo2020",
+              "SourcePrefix" :   "sc-code/ecs/app-code/"
+          }
+      },
+      "CopyFilesToS3": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+              "Handler": "index.lambda_handler",
+              "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole","Arn"]
+              },
+              "Code": {
+                  "ZipFile": {
+                      "Fn::Join": [
+                          "\n",
+                          [
+                              "",
+                              "import os",
+                              "import urllib.request",
+                              "from urllib.parse import urlparse",
+                              "import json",
+                              "import boto3",
+                              "import cfnresponse",
+                              "",
+                              "print('Loading function')",
+                              "s3 = boto3.client('s3')",
+                              "",
+                              "def lambda_handler(event, context):",
+                              "    print('Received event: ' + json.dumps(event, indent=2))",
+                              "",
+                              "    if event['RequestType'] == 'Create':",
+                              "        # get the properties set in the CloudFormation resource",
+                              "        properties = event['ResourceProperties']",
+                              "        srcBucket = properties['SourceBucketName']",
+                              "        targbucket = properties['TargetBucketName']",
+                              "        srcPrefix = properties['SourcePrefix']",
+                              "",
+                              "        try:",
+                              "            for obj in s3.list_objects_v2(Bucket=srcBucket, Prefix=srcPrefix)['Contents']:",
+                              "                s3_client.upload_file(Bucket/obj['Key'], targbucket)"
+                              "",
+                              "        except Exception as e:",
+                              "            print(e)",
+                              "            cfnresponse.send(event, context, cfnresponse.FAILED, {",
+                              "                             'Response': 'Failure'})",
+                              "            return",
+                              "",
+                              "    cfnresponse.send(event, context, cfnresponse.SUCCESS,",
+                              "                     {'Response': 'Success'})"
+                          ]
+                      ]
+                  }
+              },
+              "Runtime": "python3.6",
+              "Timeout": 60,
+              "VpcConfig" :{
+                  "SecurityGroupIds" : [{"Fn::ImportValue": "ECSFargateContainerSecurityGroup" }],
+                  "SubnetIds" : [
+                    { "Fn::ImportValue": "ECSPrivateSubnetOne"},
+                    { "Fn::ImportValue": "ECSPrivateSubnetTwo"}
+                  ]
+              }
+          }
+      },
+      "LambdaExecutionRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [
+                  {
+                     "Effect": "Allow",
+                     "Principal": {
+                        "Service": [ "lambda.amazonaws.com" ]
+                     },
+                     "Action": [ "sts:AssumeRole" ]
+                  }
+               ]
+            },
+            "Path": "/",
+            "ManagedPolicyArns":["arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"],
+            "Policies": [
+              {
+                "PolicyName": "uploadtestdata",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": "s3:PutObject",
+                            "Resource": [
+                              {"Fn::Sub" : "arn:aws:s3:::${DataLakeS3Bucket}/*"}
+                            ]
+                        }
+                    ]
+                }
+              }
+          ]
+        }
+      },
       "S3ECSTaskRole": {
          "Type": "AWS::IAM::Role",
          "Properties": {
@@ -232,7 +339,7 @@
   "Outputs": {
       "NotebookURL":{
         "Value": {"Fn::Join": ["", ["http://", {"Fn::GetAtt": [ "PublicLoadBalancer","DNSName"]},":8888"]]},
-        "Description": "Access the Jupyter notebook from this link"
+        "Description": "Access your Jupyter notebook from this link"
       }    
   }
 }
