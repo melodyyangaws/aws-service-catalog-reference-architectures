@@ -72,52 +72,46 @@
                       "Fn::Join": [
                           "\n",
                           [
-                              "",
-                              "import os",
-                              "import urllib.request",
-                              "from urllib.parse import urlparse",
-                              "import json",
-                              "import boto3",
-                              "import cfnresponse",
-                              "",
-                              "print('Loading function')",
-                              "s3 = boto3.client('s3')",
-                              "",
-                              "def lambda_handler(event, context):",
-                              "    print('Received event: ' + json.dumps(event, indent=2))",
-                              "",
-                              "    if event['RequestType'] == 'Create':",
-                              "        # get the properties set in the CloudFormation resource",
-                              "        properties = event['ResourceProperties']",
-                              "        srcBucket = properties['SourceBucketName']",
-                              "        targbucket = properties['TargetBucketName']",
-                              "        srcPrefix = properties['SourcePrefix']",
-                              "",
-                              "        try:",
-                              "            for obj in s3.list_objects_v2(Bucket=srcBucket, Prefix=srcPrefix)['Contents']:",
-                              "                s3_client.upload_file(Bucket/obj['Key'], targbucket)"
-                              "",
-                              "        except Exception as e:",
-                              "            print(e)",
-                              "            cfnresponse.send(event, context, cfnresponse.FAILED, {",
-                              "                             'Response': 'Failure'})",
-                              "            return",
-                              "",
-                              "    cfnresponse.send(event, context, cfnresponse.SUCCESS,",
-                              "                     {'Response': 'Success'})"
-                          ]
+                            "import json",
+                            "import boto3",
+                            "import cfnresponse",
+                            "",
+                            "print('Loading function')",
+                            "s3 = boto3.client('s3')",
+                            "",
+                            "def lambda_handler(event, context):",
+                            "    print('Received event: ' + json.dumps(event, indent=2))",
+                            "    if event['RequestType'] == 'Create':",
+                            "        # get the properties set in the CloudFormation resource",
+                            "        properties = event['ResourceProperties']",
+                            "        srcbucket = properties['SourceBucketName']",
+                            "        targbucket = properties['TargetBucketName']",
+                            "        srcprefix = properties['SourcePrefix']",
+                            "",
+                            "        try:",
+                            "            for obj in s3.list_objects_v2(Bucket=srcbucket, Prefix=srcprefix)['Contents']:",
+                            "                srckey = obj['Key']",
+                            "                targetkey = '/'.join(srckey.split('/')[-3:])",
+                            "",
+                            "                copy_source = {",
+                            "                      'Bucket': srcbucket,",
+                            "                      'Key': srckey",
+                            "                }",
+                            "                print (targetkey)",
+                            "                s3.copy(copy_source, targbucket, targetkey)",
+                            "",
+                            "        except Exception as e:",
+                            "            print(e)",
+                            "            cfnresponse.send(event, context, cfnresponse.FAILED, {'Response': 'Failure'})",
+                            "            return cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Response': 'Success'})",
+                            "    elif event['RequestType'] == 'Delete':",
+                            "        delete(event, context)"     
+                            ]
                       ]
                   }
               },
               "Runtime": "python3.6",
-              "Timeout": 60,
-              "VpcConfig" :{
-                  "SecurityGroupIds" : [{"Fn::ImportValue": "ECSFargateContainerSecurityGroup" }],
-                  "SubnetIds" : [
-                    { "Fn::ImportValue": "ECSPrivateSubnetOne"},
-                    { "Fn::ImportValue": "ECSPrivateSubnetTwo"}
-                  ]
-              }
+              "Timeout": 60
           }
       },
       "LambdaExecutionRole": {
@@ -149,9 +143,16 @@
                             "Resource": [
                               {"Fn::Sub" : "arn:aws:s3:::${DataLakeS3Bucket}/*"}
                             ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": "s3:ListBucket",
+                          "Resource": [
+                            {"Fn::Sub" : "arn:aws:s3:::${DataLakeS3Bucket}"}
+                          ]
                         }
                     ]
-                }
+                 }
               }
           ]
         }

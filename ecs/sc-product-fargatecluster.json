@@ -25,7 +25,7 @@
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
                 "Name": "1-ETL Cluster",
-                "Description": "This product builds an ECS cluster for executing ETL jobs.",
+                "Description": "This product builds an ECS cluster in a private network for executing ETL jobs.",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},
                 "SupportDescription": "Operations Team",
