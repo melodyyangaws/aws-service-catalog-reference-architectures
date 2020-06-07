@@ -28,7 +28,7 @@
         },
         "DataLakeS3Bucket":{
             "Type":"String",
-            "Description" : "The S3 bucket that stores your data to be processed and queried",
+            "Description" : "The S3 bucket that stores your data to be processed and queried. Change it to an existing bucket in your AWS account.",
             "Default": "arcdemo2020"
         }
   },
@@ -102,15 +102,14 @@
                             "",
                             "        except Exception as e:",
                             "            print(e)",
-                            "            cfnresponse.send(event, context, cfnresponse.FAILED, {'Response': 'Failure'})",
-                            "            return cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Response': 'Success'})",
-                            "    elif event['RequestType'] == 'Delete':",
-                            "        delete(event, context)"     
+                            "            return cfnresponse.send(event, context, cfnresponse.FAILED, {'Response': 'Failure'})",
+                            "",
+                            "    return cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Response': 'Success'})"
                             ]
                       ]
                   }
               },
-              "Runtime": "python3.6",
+              "Runtime": "python3.8",
               "Timeout": 60
           }
       },
@@ -138,6 +137,18 @@
                     "Version": "2012-10-17",
                     "Statement": [
                         {
+                            "Sid": "ListBothBuckets",
+                            "Effect": "Allow",
+                            "Action": [
+                              "s3:ListBucket"
+                            ],
+                            "Resource": [
+                              {"Fn::Sub" : "arn:aws:s3:::${DataLakeS3Bucket}"},
+                              "arn:aws:s3:::arcdemo2020"
+                            ]
+                        },
+                        {
+                            "Sid": "DestinationBucketWriteAccess",
                             "Effect": "Allow",
                             "Action": "s3:PutObject",
                             "Resource": [
@@ -145,12 +156,11 @@
                             ]
                         },
                         {
+                          "Sid": "SourceBucketReadAccess",
                           "Effect": "Allow",
-                          "Action": "s3:ListBucket",
-                          "Resource": [
-                            {"Fn::Sub" : "arn:aws:s3:::${DataLakeS3Bucket}"}
-                          ]
-                        }
+                          "Action": "s3:GetObject",
+                          "Resource": "arn:aws:s3:::arcdemo2020/sc-code/ecs/app-code/*"
+                      }
                     ]
                  }
               }
@@ -312,6 +322,26 @@
           "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
         }
       },
+      "TargetGroupSpark": {
+        "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+        "Properties" : {
+          "HealthCheckPort":  { 
+            "Fn::Sub": ["${port_to_string}", {"port_to_string":{ "Ref": "ContainerPort"}}]
+          },
+          "HealthCheckIntervalSeconds" : 60,
+          "HealthCheckPath" : "/",
+          "HealthCheckProtocol" : "HTTP",
+          "HealthCheckTimeoutSeconds" : 5,
+          "HealthyThresholdCount" : 5,
+          "TargetType": "ip",
+          "Matcher": {"HttpCode" : "302"},
+          "Name": { "Fn::Sub": ["Spark-${UniqueID}", {"UniqueID":{ "Fn::Select" : [ "3", { "Fn::Split": ["-", {"Ref": "AWS::StackName"}]}]}}]},
+          "Port": 4040,
+          "Protocol": "HTTP",
+          "UnhealthyThresholdCount" : 2,
+          "VpcId": { "Fn::ImportValue" : "FargateClusterVPCId" }
+        }
+      },
       "PublicLoadBalancer":{
         "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
         "Properties" : {
@@ -333,6 +363,15 @@
           "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupWeb"} ,"Type" : "forward" }],
           "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
           "Port" : {"Ref": "ContainerPort"},
+          "Protocol" : "HTTP"
+        }
+      },
+      "PublicLoadBalancerListenerSpark": {
+        "Type" : "AWS::ElasticLoadBalancingV2::Listener",
+        "Properties" : {
+          "DefaultActions" : [{ "TargetGroupArn" : {"Ref":"TargetGroupSpark"} ,"Type" : "forward" }],
+          "LoadBalancerArn" : {"Ref": "PublicLoadBalancer"},
+          "Port" : 4040,
           "Protocol" : "HTTP"
         }
       }

@@ -67,6 +67,7 @@ Resources:
                   - "lambda:GetFunction"
                   - "lambda:CreateFunction"     
                   - "lambda:AddPermission" 
+                  - "lambda:RemovePermission"
                   - "lambda:DeleteFunction"
                   - "lambda:InvokeFunction"   
                 Resource: '*'

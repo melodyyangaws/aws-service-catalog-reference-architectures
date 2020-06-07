@@ -25,7 +25,7 @@
             "Type": "AWS::ServiceCatalog::CloudFormationProduct",
             "Properties": {
                 "Name": "3-Arc Job Service",
-                "Description": "This product creates a simple job trigger",
+                "Description": "This product creates a trigger to orchestrate an ETL job developed in a Jupyter notebook above. Once the product is launched successfully, drop the notebook to your job trigger S3 bucket with correct prefix",
                 "Owner": {"Ref":"PortfolioProvider"},
                 "Distributor": {"Ref":"PortfolioProvider"},
                 "SupportDescription": "Operations Team",
