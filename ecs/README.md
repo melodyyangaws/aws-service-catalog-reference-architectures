@@ -1,4 +1,4 @@
-# Self-service ETL Reference Architecture
+# Self Service ETL Reference Architecture
 
 This reference architecture creates an AWS Service Catalog Portfolio called "Self-service ETL Reference Architecture"  
 The Portfolio provides 3 products which will create a full DevOps deployment pipeline from code to ETL pipeline deployment in serverless Fargate.  
