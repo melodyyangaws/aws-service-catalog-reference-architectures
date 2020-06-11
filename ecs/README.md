@@ -3,15 +3,17 @@
 This reference architecture creates an AWS Service Catalog Portfolio called "Self-service ETL Reference Architecture"  
 The Portfolio provides 3 products which will create a full DevOps deployment pipeline from code to ETL pipeline deployment in serverless Fargate.  
 
-### Create the portfolio using the Launchstack: 
+### Create the portfolio using the Launchstack with default settings: 
 [![CreateStack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/#/stacks/new?stackName=SC-RA-ECS-Portfolio&templateURL=https://arcdemo2020.s3-ap-southeast-2.amazonaws.com/sc-code/ecs/sc-portfolio-ecs.json)  
 
-1. Once above is finished, go to [Service Catalog](https://ap-southeast-2.console.aws.amazon.com/servicecatalog/) in AWS console
+1. Once finished, go to [Service Catalog](https://ap-southeast-2.console.aws.amazon.com/servicecatalog/) in your AWS console.
 2. Click your login dropdown box, choose [Switch Role](https://signin.aws.amazon.com/switchrole)
 3. Input your AWS AccountID, and `ServiceCatalogEndusers` as your Role
-4. Launch the product `1-ETL Cluster` without default settings. Wait for couple of minutes until the provision is done. Please ignore a warning message 'A stack named already exists', and proceed with the new stack name given by the system.
-5. Launch the product `2-Arc Jupyter Service` with default settings, wait until the provision is done.
-6. Finally, launch the product `3-Arc Job Service`, wait until the provision is done.
+4. Launch the product `1-ETL Cluster` with default. Wait until the provision is done. Please ignore a warning message 'A stack name already exists', proceed with the new stack name given by the system.
+5. Launch the product `2-Arc Jupyter Service` with default parameters, except the `DataLakeS3Bucket`. Replace it by an existing S3 bucket name in your account. Wait until the provision is done. 
+6. Open the notebook URL produced by your Jupyter service. Upload the sample Arc ETL job [SCD Type2 Workshop](ecs/app-code/job/SCD_Type2_workshop.ipynb) and run each stage of the job.
+6. Finally, launch the product `3-Arc Job Service`  and wait until the provision is done. 
+7. Follow the instruction in the Jupyter notebook, download it then upload to an S3 bucket `jobtrigger-xxx`. It will trigger an Arc job execution, based on the file drop event.
 
 ### Install from your own S3 bucket:
 1. clone this git repo:  

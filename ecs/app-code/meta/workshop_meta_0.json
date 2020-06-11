@@ -1,6 +1,5 @@
 [
   {
-    "id": "f457e562-5c7a-4215-a754-ab749509f3fb",
     "name": "id",
     "description": "contact id",
     "trim": true,
@@ -9,7 +8,6 @@
     "type": "integer"
   },
   {
-    "id": "d61934ed-e32e-406b-bd18-8d6b7296a8c0",
     "name": "name",
     "description": "contact name",
     "trim": true,
@@ -22,7 +20,6 @@
     ]
   },
   {
-    "id": "d61934ed-e32e-406b-bd18-8d6b7296a8c0",
     "name": "email",
     "description": "contact email",
     "trim": true,
@@ -35,7 +32,6 @@
     ]
   },
   {
-    "id": "d61934ed-e32e-406b-bd18-8d6b7296a8c0",
     "name": "state",
     "description": "state in the country of the contact",
     "trim": true,

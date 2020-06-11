@@ -36,15 +36,18 @@
         "MapContainerSize" : {
             "Small" : {
                 "cpu" : "2048" ,
-                "mem" : "8192"
+                "mem" : "8192",
+                "jvmmem": "8192"
             },
             "Medium" : {
                 "cpu" : "2048",
-                "mem" : "16384"
+                "mem" : "16384",
+                "jvmmem": "15360"
             },
             "Large" : {
                 "cpu" : "4096",
-                "mem" : "30720"
+                "mem" : "30720",
+                "jvmmem": "27648"
             }
         }
     },
@@ -109,7 +112,7 @@
                       ]
                   }
               },
-              "Runtime": "python3.8",
+              "Runtime": "python3.6",
               "Timeout": 60
           }
       },
@@ -229,7 +232,8 @@
                 "ContainerDefinitions" : [
                     {
                       "PortMappings": [
-                        { "ContainerPort": {"Ref": "ContainerPort"} }
+                        { "ContainerPort": {"Ref": "ContainerPort"} },
+                        { "ContainerPort": 4040 }
                       ],
                       "LogConfiguration": {
                         "LogDriver": "awslogs",
@@ -258,7 +262,7 @@
                                     "Fn::Join": [
                                      "", [
                                         "-Xmx",
-                                        { "Fn::FindInMap" : [ "MapContainerSize", { "Ref" : "ContainerSize" }, "mem"]},
+                                        { "Fn::FindInMap" : [ "MapContainerSize", { "Ref" : "ContainerSize" }, "jvmmem"]},
                                         "M"
                                     ]
                                  ]

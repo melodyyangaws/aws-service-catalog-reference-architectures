@@ -5,7 +5,7 @@
         "ECRImageURI": {
             "Type": "String",
             "Description" : "Arc Public Docker Image URI - triplai/arc",
-            "Default": "triplai/arc"
+            "Default": "triplai/arc:arc_2.12.2_spark_2.4.5_scala_2.12_hadoop_2.9.2_1.0.0"
         },
         "ContainerDefinitionName": {
             "Type": "String",
