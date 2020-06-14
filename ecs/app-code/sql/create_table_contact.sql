@@ -3,8 +3,8 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ${table_name}(
   ,`name` string
   ,`email` string
   ,`state` string
-  ,`valid_from` TIMESTAMP
-  ,`valid_to` TIMESTAMP
+  ,`valid_from` string
+  ,`valid_to` string
   ,`iscurrent` boolean
   ,`checksum` string
 )

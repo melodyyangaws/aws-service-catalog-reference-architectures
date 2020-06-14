@@ -290,6 +290,11 @@
               "TargetGroupArn" : { "Ref" : "TargetGroupWeb" },
               "ContainerPort" : { "Ref" : "ContainerPort" },
               "ContainerName": {"Ref":"TaskDefinitionName"}
+              },
+              {
+              "TargetGroupArn" : { "Ref" : "TargetGroupSpark" },
+              "ContainerPort" : 4040,
+              "ContainerName": {"Ref":"TaskDefinitionName"}
               }
           ],
             "Cluster": { "Fn::ImportValue" : "FargateClusterName" },

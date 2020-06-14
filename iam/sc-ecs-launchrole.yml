@@ -69,8 +69,18 @@ Resources:
                   - "lambda:AddPermission" 
                   - "lambda:RemovePermission"
                   - "lambda:DeleteFunction"
-                  - "lambda:InvokeFunction"   
+                  - "lambda:InvokeFunction" 
                 Resource: '*'
+              - Sid: FirstTimeECSUser
+                Effect: Allow
+                Action: 
+                  - iam:CreateServiceLinkedRole
+                Resource: "arn:aws:iam::*:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS*"
+                Condition:
+                  StringLike:
+                    'iam:AWSServiceName': 'ecs.amazonaws.com'
+                  
+
 Outputs:
     LaunchRoleArn:
         Value: !GetAtt SCEC2LaunchRole.Arn
