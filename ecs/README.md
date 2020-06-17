@@ -3,6 +3,8 @@
 This reference architecture creates an AWS Service Catalog Portfolio called "Self-service ETL Reference Architecture"  
 The Portfolio provides 3 products which will create a full DevOps deployment pipeline from code to ETL pipeline deployment in serverless Fargate.  
 
+<img src="./self-serve-pattern.png" alt="ref_arch"/>
+
 ### Create the portfolio using the Launchstack with default settings: 
 [![CreateStack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/#/stacks/new?stackName=SC-RA-ECS-Portfolio&templateURL=https://arcdemo2020.s3-ap-southeast-2.amazonaws.com/sc-code/ecs/sc-portfolio-ecs.json)  
 
