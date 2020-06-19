@@ -298,7 +298,7 @@ Resources:
             CidrIp: 0.0.0.0/0    
 
   # This is a role which is used by the ECS execution when spin up docker containers.
-  # The role can be used to retrieve secrets from secrets manager to be pass in to containers.
+  # The role can be used to retrieve secrets from secrets manager pass into containers.
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -309,6 +309,15 @@ Resources:
             Service: [ecs-tasks.amazonaws.com]
           Action: ['sts:AssumeRole']
       Path: /
+      Policies:
+      - PolicyName: 'getsecrets-policy'
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: 
+            - 'secretsmanager:GetSecretValue'
+            Resource: '*'
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
