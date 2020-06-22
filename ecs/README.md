@@ -17,16 +17,11 @@ The Portfolio provides 3 products which will create a full DevOps deployment pip
 6. Finally, launch the product `3-Arc Job Service`  and wait until the provision is done. 
 7. Follow the instruction in the Jupyter notebook, download it then upload to an S3 bucket `jobtrigger-xxx`. It will trigger an Arc job execution, based on the file drop event.
 
-### Install from your own S3 bucket:
-1. clone this git repo:  
-  ```git clone git@github.com:melodyyangaws/aws-service-catalog-reference-architectures.git```  
-2. Copy everything in the repo to your S3 bucket:  
-  ```cd aws-service-catalog-reference-architectures```  
-  ```aws s3 cp . s3://[YOUR-BUCKET-NAME-HERE] --exclude "*" --include "*.json" --include "*.yml" --include "*.zip" --recursive```  
-3. In the AWS [CloudFormation console](https://console.aws.amazon.com/cloudformation) choose "Create Stack" and supply the Portfolio S3 url:  
-  ```https://s3.amazonaws.com/[YOUR-BUCKET-NAME-HERE]/ecs/sc-portfolio-ecs.json```  
-5. Set the _LinkedRole1_ and _LinkedRole2_ parameters to any additional end user roles you may want to link to the Portfolio. It must be an existing IAM role in the current account.
-6. Set the _CreateEndUsers_ parameter to No if you have already run a Portfolio stack from this repo (ServiceCatalogEndusers already exists).
-7. Change the _RepoRootURL_ parameter to your bucket's root url:  
-  ```https://s3.amazonaws.com/[YOUR-BUCKET-NAME-HERE]/``` 
+### Clean up
+1. Empty out your jobtrigger S3 Bucket as administrator.
+2. Remove products in reverse order from Service Catalog or cloudformation console. Terminate Fargate task (job trigger) -> Jupyter Notebook Fargate Service -> ETL Fargate Cluster -> SC-RA-ECS-Portfolio
+
+### ETL Framework Reference
+
+[online document](https://arc.tripl.ai/extract/)
 

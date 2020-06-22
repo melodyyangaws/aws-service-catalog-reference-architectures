@@ -8,7 +8,7 @@
         "ECRImageURI": {
             "Type": "String",
             "Description" : "Arc Jupyter Public Docker Image URI",
-            "Default": "triplai/arc-jupyter"
+            "Default": "triplai/arc-jupyter:arc-jupyter_2.5.0_scala_2.12_hadoop_2.9.2_1.0.0"
         },
         "TaskDefinitionName": {
             "Type": "String",
