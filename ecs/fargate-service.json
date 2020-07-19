@@ -30,6 +30,14 @@
             "Type":"String",
             "Description" : "The S3 bucket that stores your data to be processed and queried. Change it to an existing bucket in your AWS account.",
             "Default": "arcdemo2020"
+        },
+        "JupyterPassword":{
+            "NoEcho": true,
+            "Type":"String",
+            "MinLength": 6,
+            "MaxLength": 40,
+            "Description" : "A new passworrd for your Juypyter Lab instance.The length is from 6 to 40 characters.The pattern allows lowercase and uppercase alphabetic characters and numerals.",
+            "AllowedPattern": "^[a-zA-Z0-9]*$"
         }
   },
   "Mappings" : {
@@ -245,11 +253,12 @@
                       },
                       "Command": [
                           "jupyter",
-                          "hub",
+                          "notebook",
                           "--ip=0.0.0.0",
                           "--no-browser",
-                          "--NotebookApp.password=''",
-                          "--NotebookApp.token=''"
+                          "--allow-root",
+                          {"Fn::Join": ["", ["--NotebookApp.token='", {"Ref":"JupyterPassword"},"'"]]}
+
                      ],
                       "Environment": [
                         {
@@ -387,8 +396,8 @@
   },  
   "Outputs": {
       "NotebookURL":{
-        "Value": {"Fn::Join": ["", ["http://", {"Fn::GetAtt": [ "PublicLoadBalancer","DNSName"]},":8888"]]},
-        "Description": "Access your Jupyter notebook from this link"
+        "Value": {"Fn::Join": ["", ["http://", {"Fn::GetAtt": [ "PublicLoadBalancer","DNSName"]},":8888/lab"]]},
+        "Description": "Access your Jupyter Lab from this link"
       }    
   }
 }
