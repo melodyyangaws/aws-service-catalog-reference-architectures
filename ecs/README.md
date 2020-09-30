@@ -3,12 +3,11 @@
 This reference architecture creates an AWS Service Catalog Portfolio called "Self-service ETL Reference Architecture"  
 The Portfolio provides 3 products which will create a full DevOps deployment pipeline from code to ETL pipeline deployment in serverless Fargate.  
 
-![](/images/self-serve-pattern.png)
+![](./images/self-serve-pattern.png)
 
 ### Create the portfolio using the LaunchStack with default settings: 
 [![CreateStack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/#/stacks/new?stackName=SC-RA-ECS-Portfolio&templateURL=https://arcdemo2020.s3-ap-southeast-2.amazonaws.com/sc-code/ecs/sc-portfolio-ecs.json)  
 
-[![demo](/images/self-serve-demo.png)](https://www.youtube.com/watch?v=XfyaUH4TLvg&t=5611s "SELF Service ETL")
 
 1. Once finished, go to [Service Catalog](https://ap-southeast-2.console.aws.amazon.com/servicecatalog/) in your AWS console.
 2. Click your login dropdown box, choose [Switch Role](https://signin.aws.amazon.com/switchrole)
@@ -18,6 +17,11 @@ The Portfolio provides 3 products which will create a full DevOps deployment pip
 6. Open the notebook URL produced by your Jupyter service. Upload the sample file [SCD Type2 Workshop](app-code/job/) and run each stage in your notebook web interface. No need to change any parameters or variables.
 7. Finally, launch the product `3-Arc Job Service` , wait until the provision is completed. 
 8. To be able to productionize the job, follow the instruction in the notebook, download and upload it to a S3 bucket `jobtrigger-<random>` in your AWS account. Due to the restricted data access against the `ServiceCatalogEndusers`, for the workshop purpose, switch back to your own login if you want to upload the file via AWS console. 
+
+### Demo Video
+
+[![demo](./images/self-serve-demo.png)](https://www.youtube.com/watch?v=XfyaUH4TLvg&t=5611s "SELF Service ETL")
+
 
 ### Recommendation
 
