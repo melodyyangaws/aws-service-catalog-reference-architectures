@@ -31,7 +31,7 @@
         },
         "JobTriggerPreffix": {
            "Type":"String",
-            "Description" : "S3 bucket key name, if you prefer to drop the notebook to a subfolder."
+            "Description" : "S3 bucket folder name, if you prefer to drop the notebook to a subfolder."
         },
         "DataLakeS3Bucket":{
             "Type":"String",
@@ -67,7 +67,7 @@
               "LambdaConfigurations": [
                 {
                   "Function": {
-                  "Fn::GetAtt": ["LambdaTriggerTask","Arn"]
+                    "Fn::GetAtt": ["LambdaTriggerTask","Arn"]
                   },
                   "Event": "s3:ObjectCreated:*",
                   "Filter": {
